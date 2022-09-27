@@ -32,8 +32,8 @@ async fn main() {
                 let result = run(bus_svc, slack_service).await;
                 result
             });
-
-    warp::serve(bus_end_point)
+    let health_end_point = warp::path!("healthz").map(||"ok");
+    warp::serve(bus_end_point.or(health_end_point))
         .run(([127, 0, 0, 1], 10000))
         .await;
 
