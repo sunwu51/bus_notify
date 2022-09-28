@@ -1,7 +1,7 @@
 use reqwest::Client;
 use std::env;
 use crate::bus::BusInfo;
-use chrono::{TimeZone, Utc};
+use chrono::Utc;
 use chrono_tz::Asia::Shanghai;
 pub struct SlackSvc {
     url: String,
