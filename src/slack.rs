@@ -1,7 +1,8 @@
 use reqwest::Client;
 use std::env;
 use crate::bus::BusInfo;
-
+use chrono::{TimeZone, Utc};
+use chrono_tz::Asia::Shanghai;
 pub struct SlackSvc {
     url: String,
     client: Client,
@@ -10,13 +11,17 @@ pub struct SlackSvc {
 impl SlackSvc {
     pub fn new() -> SlackSvc {
         let token = env::var("SLACK_TOKEN");
-        SlackSvc { client: reqwest::Client::new(), url: format!("https://hooks.slack.com/services/T0445SPU4BB/B0445SSQWM7/{}", token.unwrap_or("xxx".to_string())) }
+        SlackSvc { client: reqwest::Client::new(), url: format!("https://hooks.slack.com/services/T0445SPU4BB/B0445SSQWM7/{}", token.unwrap_or("2agd5kYQUgp3m6I7iFaajaSL".to_string())) }
     }
     pub async fn notify_slack(&self, arr: &Vec<BusInfo>) {
         if arr.len() > 0 {
             let mut str = String::from("");
 
             for ele in arr {
+                let time = Utc::now().with_timezone(&Shanghai);
+                let time = time.format("%H:%M");
+                str += &time.to_string();
+                str += " ";
                 str += &(ele.to_string() + "\n");
             }
 
