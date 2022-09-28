@@ -11,7 +11,7 @@ pub struct SlackSvc {
 impl SlackSvc {
     pub fn new() -> SlackSvc {
         let token = env::var("SLACK_TOKEN");
-        SlackSvc { client: reqwest::Client::new(), url: format!("https://hooks.slack.com/services/T0445SPU4BB/B0445SSQWM7/{}", token.unwrap_or("2agd5kYQUgp3m6I7iFaajaSL".to_string())) }
+        SlackSvc { client: reqwest::Client::new(), url: format!("https://hooks.slack.com/services/T0445SPU4BB/B0445SSQWM7/{}", token.unwrap_or("x".to_string())) }
     }
     pub async fn notify_slack(&self, arr: &Vec<BusInfo>) {
         if arr.len() > 0 {
