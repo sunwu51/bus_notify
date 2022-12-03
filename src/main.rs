@@ -1,43 +1,42 @@
+pub mod core;
+pub mod utils;
+use log::LevelFilter;
+use reqwest::StatusCode;
+use serde_json::json;
+use warp::reply::*;
 use warp::Filter;
-use crate::bus::BusSvc;
-use crate::slack::SlackSvc;
 
-
-extern crate serde;
-extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
-extern crate chrono;
-extern crate chrono_tz;
-
-pub mod bus;
-pub mod db;
-pub mod slack;
-
-
-async fn run(bus_svc: BusSvc, slack_service: SlackSvc) -> Result<impl warp::Reply, warp::Rejection> {
-    //"newbus":[{"order":2,"distanceToSc":"414","toppx":50},{"order":13,"distanceToSc":"185","toppx":710},{"order":23,"distanceToSc":"523","toppx":1310}
-    let bus_fut = bus_svc.fetch_bus_info();
-    let arr = bus_fut.await.unwrap();
-    slack_service.notify_slack(&arr).await;
-    Ok(warp::reply::json(&arr))
-}
-
-
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
 
 #[tokio::main]
 async fn main() {
-    let bus_end_point = warp::path!("bus")
-            .and(warp::get())
-            .and_then(|| async move {
-                let bus_svc = BusSvc::new();
-                let slack_service = SlackSvc::new();
-                let result = run(bus_svc, slack_service).await;
-                result
-            });
-    let health_end_point = warp::path!("healthz").map(||"ok");
+    // env_logger::init();
+    use env_logger::{Builder, Target};
+    let mut builder = Builder::from_default_env();
+    builder.target(Target::Stdout);
+    builder.filter_level(LevelFilter::Info);
+    builder.init();
+
+    let bus_end_point = warp::path!("bus").and(warp::get()).then(|| async move {
+        let bus_info = core::service::fetch_and_notify().await;
+        if bus_info.is_ok() {
+            return with_status(json(&bus_info.unwrap()), StatusCode::OK);
+        } else {
+            return with_status(
+                json(&json!({ "msg": format!("{:?}", bus_info.unwrap_err()) })),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            );
+        }
+    });
+
+    let health_end_point = warp::path!("healthz").map(|| "ok");
+
     warp::serve(bus_end_point.or(health_end_point))
         .run(([127, 0, 0, 1], 10000))
         .await;
-
 }
