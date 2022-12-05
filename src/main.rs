@@ -21,6 +21,7 @@ async fn main() {
     builder.target(Target::Stdout);
     builder.filter_level(LevelFilter::Info);
     builder.init();
+    let port : i32 = env::var("port").unwrap_or("10000".to_string()).parse().unwrap();
 
     let bus_end_point = warp::path!("bus").and(warp::get()).then(|| async move {
         let bus_info = core::service::fetch_and_notify().await;
@@ -37,6 +38,6 @@ async fn main() {
     let health_end_point = warp::path!("healthz").map(|| "ok");
 
     warp::serve(bus_end_point.or(health_end_point))
-        .run(([127, 0, 0, 1], 10000))
+        .run(([0, 0, 0, 0], port))
         .await;
 }
