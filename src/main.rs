@@ -5,6 +5,7 @@ use reqwest::StatusCode;
 use serde_json::json;
 use warp::reply::*;
 use warp::Filter;
+use std::env;
 
 #[macro_use]
 extern crate serde_derive;
@@ -21,7 +22,7 @@ async fn main() {
     builder.target(Target::Stdout);
     builder.filter_level(LevelFilter::Info);
     builder.init();
-    let port : i32 = env::var("port").unwrap_or("10000".to_string()).parse().unwrap();
+    let port : u16 = env::var("port").unwrap_or("10000".to_string()).parse().unwrap();
 
     let bus_end_point = warp::path!("bus").and(warp::get()).then(|| async move {
         let bus_info = core::service::fetch_and_notify().await;
